@@ -2,18 +2,52 @@
 
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\ProductController;
-use App\Models\Product;
-use App\Models\Category;
+use App\Models\Course;
+use Illuminate\Http\Request;
+use App\Http\Controllers\CourseController;
+use App\Http\Controllers\LessonController;
+use App\Http\Controllers\EnrollmentController;
+use App\Http\Controllers\DashboardController;
 
-// 👉 Trang chủ = shop
-Route::get('/', [ProductController::class, 'home'])->name('home');
+Route::get('/', fn() => view('home'));
+Route::get('/dashboard', [DashboardController::class, 'index']);
 
-// 👉 Dashboard (admin)
-Route::get('/dashboard', [ProductController::class, 'dashboard'])->name('dashboard');
+Route::resource('courses', CourseController::class);
 
-// CRUD
-Route::resource('products', ProductController::class)->except(['show']);
+Route::get('lessons/{course}', [LessonController::class, 'index'])->name('lessons.index');
+Route::delete('lessons/{lesson}', [LessonController::class, 'destroy'])->name('lessons.destroy');
 
-// 👉 Lịch sử thao tác
-Route::get('/history', [ProductController::class, 'history'])->name('history');
+Route::get('enrollments/{course}', [EnrollmentController::class, 'index'])->name('enrollments.index');
+Route::post('enrollments', [EnrollmentController::class, 'store'])->name('enrollments.store');
+Route::get('/', function (Request $request) {
+
+    $query = Course::query();
+
+ // 🔍 search KHÔNG phân biệt hoa thường
+    if ($request->keyword) {
+        $keyword = strtolower($request->keyword);
+
+        $query->whereRaw('LOWER(name) LIKE ?', ["%$keyword%"]);
+    }
+
+        // 🎯 lọc trạng thái
+    if ($request->status) {
+        $query->where('status', $request->status);
+    }
+
+       // 💰 lọc giá (linh hoạt hơn)
+    if ($request->min_price) {
+        $query->where('price', '>=', $request->min_price);
+    }
+
+    if ($request->max_price) {
+        $query->where('price', '<=', $request->max_price);
+    }
+
+    // chỉ hiển thị khóa học public
+    $query->where('status', 'published');
+
+    $courses = $query->latest()->paginate(6);
+
+    return view('home', compact('courses'));
+});
