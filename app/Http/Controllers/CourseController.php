@@ -33,7 +33,7 @@ public function index(Request $request)
         $query->where('price', '<=', $request->max_price);
     }
 
-    $courses = $query->latest()->paginate(5);
+$courses = $query->latest()->paginate(6)->withQueryString();
 
     if ($request->ajax()) {
         return view('courses.partials.list', compact('courses'))->render();
@@ -109,4 +109,13 @@ public function index(Request $request)
 
         return back()->with('success', 'Đã khôi phục');
     }
+
+    public function lessons($id)
+{
+    $course = Course::with(['lessons' => function ($q) {
+        $q->orderBy('order');
+    }])->findOrFail($id);
+
+    return view('lessons.index', compact('course'));
+}
 }

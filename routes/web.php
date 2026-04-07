@@ -14,13 +14,17 @@ Route::get('/dashboard', [DashboardController::class, 'index']);
 
 // ===== COURSES =====
 Route::resource('courses', CourseController::class);
-
+Route::get('/courses/{id}/lessons', [CourseController::class, 'lessons'])
+    ->name('courses.lessons');
+    
 // ===== STUDENTS =====
 Route::resource('students', StudentController::class);
 
 // ===== LESSONS =====
-Route::get('lessons/{course}', [LessonController::class, 'index'])->name('lessons.index');
+
 Route::delete('lessons/{lesson}', [LessonController::class, 'destroy'])->name('lessons.destroy');
+Route::get('/courses/{id}/lessons', [CourseController::class, 'lessons'])
+    ->name('courses.lessons');
 
 // ===== ENROLLMENTS (SỬA CHUẨN) =====
 Route::get('enrollments', [EnrollmentController::class, 'index'])->name('enrollments.index');
@@ -34,7 +38,7 @@ Route::get('/', function (Request $request) {
     // 🔍 search KHÔNG phân biệt hoa thường
     if ($request->keyword) {
         $keyword = strtolower($request->keyword);
-        $query->whereRaw('LOWER(name) LIKE ?', ["%$keyword%"]);
+     $query->where('name', 'like', '%' . $request->keyword . '%');
     }
 
     // 🎯 lọc trạng thái
@@ -53,7 +57,7 @@ Route::get('/', function (Request $request) {
 
     $query->where('status', 'published');
 
-    $courses = $query->latest()->paginate(6);
+$courses = $query->latest()->paginate(6)->withQueryString();
 
     return view('home', compact('courses'));
 });

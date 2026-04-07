@@ -35,11 +35,15 @@
     <div class="mb-3">
         <label>Ảnh</label>
 
-        @if($course->image)
-            <div class="mb-2">
-                <img src="{{ asset('storage/'.$course->image) }}" width="120">
-            </div>
-        @endif
+  @if($course->image)
+    <div class="mb-2">
+        <img 
+            src="{{ str_starts_with($course->image, 'images/') 
+                ? asset($course->image) 
+                : asset('storage/'.$course->image) }}" 
+            width="120">
+    </div>
+@endif
 
         <input type="file" name="image" class="form-control">
     </div>

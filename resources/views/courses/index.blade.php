@@ -42,17 +42,27 @@
     <td>{{ number_format($c->price, 0, ',', '.') }}</td>
     <td>@include('components.status',['status'=>$c->status])</td>
     <td>{{ $c->lessons_count }}</td>
-    <td>
-        @if($c->image)
-            <img src="{{ asset('storage/'.$c->image) }}" width="80">
-        @endif
-    </td>
+<td>
+    <img 
+        src="{{ $c->image 
+            ? (str_starts_with($c->image, 'images/') 
+                ? asset($c->image) 
+                : asset('storage/'.$c->image)) 
+            : asset('images/default.jpg') }}"
+        width="120"
+        style="border-radius:10px; object-fit:cover;">
+</td>
+
     <td>
         <a href="{{ route('courses.edit',$c->id) }}" class="btn btn-warning btn-sm">Sửa</a>
 
         <form action="{{ route('courses.destroy',$c->id) }}" method="POST" style="display:inline;">
             @csrf @method('DELETE')
-            <button class="btn btn-danger btn-sm">Xóa</button>
+           <button 
+    class="btn btn-danger btn-sm"
+    onclick="return confirm('Bạn có chắc chắn muốn xóa khóa học này không?')">
+    Xóa
+</button>
         </form>
     </td>
 </tr>

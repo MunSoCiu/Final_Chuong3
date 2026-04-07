@@ -2,21 +2,41 @@
 
 @section('content')
 
-<h3>Danh sách học viên</h3>
+<a href="/" class="btn btn-secondary mb-3">
+    ← Quay lại
+</a>
+<h3>{{ $course->name }}</h3>
 
-<table class="table">
-<tr>
-    <th>Tên</th>
-    <th>Email</th>
-</tr>
+<div class="row">
 
-@foreach($enrollments as $e)
-<tr>
-    <td>{{ $e->student->name }}</td>
-    <td>{{ $e->student->email }}</td>
-</tr>
-@endforeach
+    <!-- LEFT: Lessons -->
+    <div class="col-md-8">
+        @foreach($course->lessons as $lesson)
+        <div class="card mb-3 p-3">
+            <h5>{{ $lesson->title }}</h5>
+            <p>{{ $lesson->content }}</p>
 
-</table>
+            @if($lesson->video_url)
+                <iframe width="100%" height="250"
+                    src="{{ $lesson->video_url }}"
+                    frameborder="0" allowfullscreen>
+                </iframe>
+            @endif
+        </div>
+        @endforeach
+    </div>
+
+    <!-- RIGHT: Học viên -->
+    <div class="col-md-4">
+        <h5>👨‍🎓 Học viên</h5>
+
+        @foreach($course->enrollments as $e)
+            <div class="border p-2 mb-2 rounded">
+                {{ $e->student->name ?? 'N/A' }}
+            </div>
+        @endforeach
+    </div>
+
+</div>
 
 @endsection

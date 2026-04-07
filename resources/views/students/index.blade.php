@@ -58,7 +58,11 @@
 
         <form action="{{ route('students.destroy',$s->id) }}" method="POST" style="display:inline;">
             @csrf @method('DELETE')
-            <button class="btn btn-danger btn-sm">Xóa</button>
+            <button 
+    class="btn btn-danger btn-sm"
+    onclick="return confirm('Bạn có chắc chắn muốn xóa khóa học này không?')">
+    Xóa
+</button>
         </form>
     </td>
 </tr>

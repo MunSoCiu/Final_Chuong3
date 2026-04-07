@@ -5,11 +5,29 @@
 <h2 class="mb-4">📚 Danh sách khóa học</h2>
 
 <style>
-.course-card {
-    border-radius: 15px;
-    overflow: hidden;
-    transition: 0.3s;
+.pagination .page-link {
+    border-radius: 10px;
+    margin: 0 4px;
+    color: #333;
+    transition: 0.2s;
+}
+.pagination .page-link:hover {
+    background: #0d6efd;
+    color: #fff;
+}
+.pagination .active .page-link {
+    background: #0d6efd;
+    color: #fff;
     border: none;
+}
+.pagination .page-item.disabled .page-link {
+    color: #aaa;
+}
+
+.course-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 .course-card:hover {
     transform: translateY(-5px);
@@ -24,10 +42,21 @@
     font-weight: bold;
     font-size: 18px;
 }
+.desc-2line {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
 .course-btn {
     border-radius: 10px;
     font-weight: 500;
-    height: 42px; /* ✅ FIX NÚT BẰNG NHAU */
+    height: 42px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -46,81 +75,54 @@
 .btn-join:hover {
     background: #218838;
 }
-.course-btn:hover {
-    transform: scale(1.03);
-}
 </style>
 
-<!-- ALERT -->
 @if(session('success'))
+
 <div class="alert alert-success">
     {{ session('success') }}
 </div>
 @endif
 
-<!-- FORM SEARCH -->
-<form method="GET" class="row mb-4">
-
-    <div class="col-md-3">
-        <input type="text" name="keyword" class="form-control"
-               placeholder="Tìm khóa học..."
-               value="{{ request('keyword') }}">
-    </div>
-
-    <div class="col-md-2">
-        <select name="status" class="form-control">
-            <option value="">-- Trạng thái --</option>
-            <option value="published" {{ request('status')=='published'?'selected':'' }}>Published</option>
-            <option value="draft" {{ request('status')=='draft'?'selected':'' }}>Draft</option>
-        </select>
-    </div>
-
-    <div class="col-md-2">
-        <input type="number" name="min_price" class="form-control"
-               placeholder="Giá từ"
-               value="{{ request('min_price') }}">
-    </div>
-
-    <div class="col-md-2">
-        <input type="number" name="max_price" class="form-control"
-               placeholder="Đến"
-               value="{{ request('max_price') }}">
-    </div>
-
-    <div class="col-md-2">
-        <button class="btn btn-primary w-100">Tìm</button>
-    </div>
-
-</form>
-
 <!-- LIST -->
+
 <div class="row">
 
 @foreach($courses as $c)
+
 <div class="col-md-4 mb-4">
     <div class="card course-card">
 
-        <img src="{{ $c->image ? asset('storage/'.$c->image) : 'https://via.placeholder.com/300x200' }}"
-             class="card-img-top course-img">
 
-        <div class="card-body d-flex flex-column">
+    <!-- IMAGE -->
+    <img 
+    src="{{ $c->image 
+        ? (str_starts_with($c->image, 'images/') 
+            ? asset($c->image) 
+            : asset('storage/'.$c->image)) 
+        : 'https://via.placeholder.com/300x200' }}"
+    class="card-img-top course-img">
 
-            <h5 class="fw-bold mb-2">{{ $c->name }}</h5>
+    <div class="card-body">
 
-            <p class="text-muted desc-2line mb-2">
-                {{ $c->description }}
-            </p>
+        <h5 class="fw-bold">{{ $c->name }}</h5>
 
-            <div class="course-price mb-2">
-                {{ number_format($c->price) }}đ
-            </div>
+        <p class="text-muted desc-2line">
+            {{ $c->description }}
+        </p>
 
-            <span class="badge bg-success mb-3">
+        <div class="course-price">
+            {{ number_format($c->price) }}đ
+        </div>
+
+        <div class="mt-auto">
+
+            <span class="badge bg-success mb-2 d-block">
                 {{ $c->status }}
             </span>
 
             <!-- BUTTON -->
-            <div class="d-flex gap-2 mt-auto">
+            <div class="d-flex gap-2">
 
                 <!-- Chi tiết -->
                 <button class="btn btn-detail course-btn w-50"
@@ -130,50 +132,91 @@
                 </button>
 
                 <!-- Tham gia -->
-                <form action="{{ route('enrollments.store') }}" method="POST" class="w-50 d-flex">
-                    @csrf
-                    <input type="hidden" name="course_id" value="{{ $c->id }}">
-                    <input type="hidden" name="name" value="Guest User">
-                    <input type="hidden" name="email" value="guest{{ $c->id }}@mail.com">
-
-                    <button class="btn btn-join course-btn w-100">
-                        Tham gia
-                    </button>
-                </form>
+                <button class="btn btn-join course-btn w-50"
+                        data-bs-toggle="modal"
+                        data-bs-target="#joinModal{{ $c->id }}">
+                    Tham gia
+                </button>
 
             </div>
-
         </div>
+
     </div>
 </div>
 
-<!-- MODAL -->
+
+</div>
+
+<!-- MODAL CHI TIẾT -->
+
 <div class="modal fade" id="courseModal{{ $c->id }}" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+
+  <div class="modal-header">
+    <h5 class="modal-title">{{ $c->name }}</h5>
+    <button class="btn-close" data-bs-dismiss="modal"></button>
+  </div>
+
+  <div class="modal-body">
+
+    <img 
+    src="{{ $c->image 
+        ? (str_starts_with($c->image, 'images/') 
+            ? asset($c->image) 
+            : asset('storage/'.$c->image)) 
+        : 'https://via.placeholder.com/300x200' }}"
+    class="img-fluid mb-3">
+
+    <p><strong>Giá:</strong> {{ number_format($c->price) }}đ</p>
+    <p><strong>Trạng thái:</strong> {{ $c->status }}</p>
+
+    <hr>
+
+    <p>{{ $c->description }}</p>
+
+  </div>
+
+</div>
+
+
+  </div>
+</div>
+
+<!-- MODAL XÁC NHẬN -->
+
+<div class="modal fade" id="joinModal{{ $c->id }}" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
 
-      <div class="modal-header">
-        <h5 class="modal-title">{{ $c->name }}</h5>
-        <button class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
 
-      <div class="modal-body">
-        <p><strong>Giá:</strong> {{ number_format($c->price) }}đ</p>
-        <p>{{ $c->description }}</p>
-      </div>
+  <div class="modal-header">
+    <h5 class="modal-title">Xác nhận tham gia</h5>
+    <button class="btn-close" data-bs-dismiss="modal"></button>
+  </div>
 
-      <div class="modal-footer">
-        <form action="{{ route('enrollments.store') }}" method="POST">
-            @csrf
-            <input type="hidden" name="course_id" value="{{ $c->id }}">
-            <input type="hidden" name="name" value="Guest User">
-            <input type="hidden" name="email" value="guest{{ $c->id }}@mail.com">
+  <div class="modal-body">
+    Bạn có chắc muốn tham gia khóa học 
+    <strong class="text-primary">{{ $c->name }}</strong> không?
+  </div>
 
-            <button class="btn btn-success">Tham gia ngay</button>
-        </form>
-      </div>
+  <div class="modal-footer">
 
-    </div>
+    <button class="btn btn-secondary" data-bs-dismiss="modal">
+        Đóng
+    </button>
+
+    <a href="{{ route('courses.lessons', $c->id) }}" 
+       class="btn btn-success">
+        Xác nhận
+    </a>
+
+  </div>
+
+</div>
+
+
   </div>
 </div>
 
@@ -182,27 +225,9 @@
 </div>
 
 <!-- PAGINATION -->
-<div class="pagination-custom mt-3">
 
-@if ($courses->onFirstPage())
-    <span class="page-btn">‹</span>
-@else
-    <a href="{{ $courses->previousPageUrl() }}" class="page-btn">‹</a>
-@endif
-
-@for ($i = 1; $i <= $courses->lastPage(); $i++)
-    <a href="{{ $courses->url($i) }}" 
-       class="page-btn {{ $i == $courses->currentPage() ? 'page-active' : '' }}">
-        {{ $i }}
-    </a>
-@endfor
-
-@if ($courses->hasMorePages())
-    <a href="{{ $courses->nextPageUrl() }}" class="page-btn">›</a>
-@else
-    <span class="page-btn">›</span>
-@endif
-
+<div class="d-flex justify-content-center mt-4">
+    {{ $courses->links('pagination::bootstrap-5') }}
 </div>
 
 @endsection
