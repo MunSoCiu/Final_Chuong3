@@ -5,19 +5,42 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use Illuminate\Support\Str;
 use App\Http\Requests\CourseRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class CourseController extends Controller
 {
     // 📌 Danh sách
-    public function index()
-    {
-        $courses = Course::withCount('lessons')
-            ->latest()
-            ->paginate(5);
+  
 
-        return view('courses.index', compact('courses'));
+public function index(Request $request)
+{
+    $query = Course::withCount('lessons');
+
+    if ($request->keyword) {
+        $query->where('name', 'like', '%' . $request->keyword . '%');
     }
 
+    if ($request->status) {
+        $query->where('status', $request->status);
+    }
+
+    if ($request->min_price) {
+        $query->where('price', '>=', $request->min_price);
+    }
+
+    if ($request->max_price) {
+        $query->where('price', '<=', $request->max_price);
+    }
+
+    $courses = $query->latest()->paginate(5);
+
+    if ($request->ajax()) {
+        return view('courses.partials.list', compact('courses'))->render();
+    }
+
+    return view('courses.index', compact('courses'));
+}
     // 📌 Form thêm
     public function create()
     {
@@ -26,22 +49,20 @@ class CourseController extends Controller
 
     // 📌 Lưu
     public function store(CourseRequest $request)
-    {
-        $data = $request->validated();
+{
+    $data = $request->validated();
 
-        // slug
-        $data['slug'] = Str::slug($data['name']);
+    $data['slug'] = Str::slug($data['name']);
 
-        // upload ảnh
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('courses', 'public');
-        }
-
-        Course::create($data);
-
-        return redirect()->route('courses.index')
-            ->with('success', 'Thêm khóa học thành công');
+    if ($request->hasFile('image')) {
+        $data['image'] = $request->file('image')->store('courses', 'public');
     }
+
+    Course::create($data);
+
+    return redirect()->route('courses.index')
+        ->with('success', 'Thêm khóa học thành công');
+}
 
     // 📌 Form sửa
     public function edit(Course $course)
@@ -50,21 +71,28 @@ class CourseController extends Controller
     }
 
     // 📌 Update
-    public function update(CourseRequest $request, Course $course)
-    {
-        $data = $request->validated();
+   public function update(CourseRequest $request, Course $course)
+{
+    $data = $request->validated();
 
-        $data['slug'] = Str::slug($data['name']);
+    $data['slug'] = Str::slug($data['name']);
 
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('courses', 'public');
+    if ($request->hasFile('image')) {
+
+        // ✅ XÓA ẢNH CŨ
+        if ($course->image) {
+            Storage::disk('public')->delete($course->image);
         }
 
-        $course->update($data);
-
-        return redirect()->route('courses.index')
-            ->with('success', 'Cập nhật thành công');
+        // ✅ LƯU ẢNH MỚI
+        $data['image'] = $request->file('image')->store('courses', 'public');
     }
+
+    $course->update($data);
+
+    return redirect()->route('courses.index')
+        ->with('success', 'Cập nhật thành công');
+}
 
     // 📌 Xóa mềm
     public function destroy(Course $course)

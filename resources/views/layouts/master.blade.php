@@ -23,6 +23,14 @@
             <li class="nav-item">
                 <a href="{{ route('courses.index') }}" class="nav-link text-white">📘 Courses</a>
             </li>
+            <li class="nav-item">
+                <a href="{{ route('students.index') }}" class="nav-link text-white">👨‍🎓 Students</a>
+            </li>
+            <li class="nav-item">
+    <a href="{{ route('enrollments.index') }}" class="nav-link text-white">
+        📚 Đăng ký khóa học
+    </a>
+</li>
         </ul>
     </div>
 
@@ -34,6 +42,6 @@
     </div>
 
 </div>
-
+@yield('scripts')
 </body>
 </html>

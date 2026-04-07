@@ -18,23 +18,37 @@ class EnrollmentController extends Controller
 
         $student = Student::firstOrCreate(
             ['email' => $request->email],
-            ['name' => $request->name]
+            [
+        'name' => $request->name,
+        'msv' => '2022' . rand(1000,9999), // ✅ thêm msv
+        'dob' => now()->subYears(rand(18,22)),
+        'address' => 'Chưa cập nhật'
+    ]
         );
 
         Enrollment::firstOrCreate([
             'course_id' => $request->course_id,
             'student_id' => $student->id
+            ],[
+    'enrolled_at' => now()
         ]);
 
         return back()->with('success', 'Đăng ký thành công');
     }
 
-    public function index($courseId)
-    {
-        $enrollments = Enrollment::with('student')
-            ->where('course_id', $courseId)
-            ->get();
+  public function index()
+{
+    $query = Enrollment::with(['student','course']);
 
-        return view('enrollments.index', compact('enrollments'));
+    // lọc theo course nếu có
+    if(request('course_id')){
+        $query->where('course_id', request('course_id'));
     }
+
+  $enrollments = Enrollment::with(['student','course'])
+    ->latest()
+    ->paginate(10);
+
+    return view('enrollments.index', compact('enrollments'));
+}
 }

@@ -1,59 +1,168 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+📚 Course Management System
+Hệ thống quản lý khóa học trực tuyến xây dựng bằng Laravel 10, áp dụng Eloquent ORM, Form Request Validation, Soft Delete và Blade Template.
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+🧱 Yêu cầu hệ thống
+Công cụPhiên bản tối thiểuPHP>= 8.1Composer>= 2.xLaravel10.xMySQL>= 8.0Node.js>= 18.x (cho Vite)
 
-## About Laravel
+⚙️ Hướng dẫn cài đặt
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+1. Clone dự án
+   bashgit clone https://github.com/your-username/course-management.git
+   cd course-management
+2. Cài đặt PHP dependencies
+   bashcomposer install
+3. Cài đặt Node dependencies
+   bashnpm install
+4. Tạo file môi trường
+   bashcp .env.example .env
+   php artisan key:generate
+5. Cấu hình database trong .env
+   envDB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=course_management
+   DB_USERNAME=root
+   DB_PASSWORD=your_password
+6. Tạo database
+   sqlCREATE DATABASE course_management CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+7. Chạy Migration & Seeder
+   bashphp artisan migrate
+   php artisan db:seed
+8. Tạo symbolic link cho storage (upload ảnh)
+   bashphp artisan storage:link
+9. Build assets
+   bashnpm run dev
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+# hoặc production:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+npm run build 10. Khởi động server
+bashphp artisan serve
+Truy cập: http://localhost:8000
 
-## Learning Laravel
+📁 Cấu trúc dự án
+app/
+├── Http/
+│ ├── Controllers/
+│ │ ├── CourseController.php
+│ │ ├── LessonController.php
+│ │ └── EnrollmentController.php
+│ └── Requests/
+│ ├── CourseRequest.php
+│ └── EnrollmentRequest.php
+├── Models/
+│ ├── Course.php
+│ ├── Lesson.php
+│ ├── Student.php
+│ └── Enrollment.php
+database/
+├── migrations/
+│ ├── create_courses_table.php
+│ ├── create_lessons_table.php
+│ ├── create_students_table.php
+│ └── create_enrollments_table.php
+└── seeders/
+└── DatabaseSeeder.php
+resources/
+└── views/
+├── layouts/
+│ └── master.blade.php
+├── components/
+│ ├── alert.blade.php
+│ ├── badge.blade.php
+│ └── course-card.blade.php
+├── courses/
+│ ├── index.blade.php
+│ ├── create.blade.php
+│ ├── edit.blade.php
+│ └── show.blade.php
+├── lessons/
+│ ├── index.blade.php
+│ ├── create.blade.php
+│ └── edit.blade.php
+└── enrollments/
+├── index.blade.php
+└── create.blade.php
+routes/
+└── web.php
+storage/
+└── app/public/courses/ ← ảnh upload
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+🗃️ Sơ đồ quan hệ dữ liệu (ERD)
+courses lessons students enrollments
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+id (PK) 1──< id (PK) id (PK) 1──< id (PK)
+title course_id (FK) name course_id (FK)
+slug title email student_id (FK)
+price content enrolled_at
+description video_url
+image order
+status
+deleted_at
+Quan hệ:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Course hasMany Lesson
+Course hasMany Enrollment
+Student hasMany Enrollment
+Course belongsToMany Student (qua bảng enrollments)
 
-### Premium Partners
+🚀 Các chức năng chính
+Quản lý Khóa học
+Chức năngRouteMethodDanh sách/coursesGETThêm mới/courses/createGETLưu mới/coursesPOSTChi tiết/courses/{id}GETChỉnh sửa/courses/{id}/editGETCập nhật/courses/{id}PUTXóa mềm/courses/{id}DELETEKhôi phục/courses/{id}/restorePOST
+Quản lý Bài học
+Chức năngRouteMethodDanh sách theo khóa/courses/{course}/lessonsGETThêm bài học/courses/{course}/lessons/createGETLưu bài học/courses/{course}/lessonsPOSTCập nhật/courses/{course}/lessons/{lesson}PUTXóa/courses/{course}/lessons/{lesson}DELETE
+Quản lý Đăng ký
+Chức năngRouteMethodDanh sách/enrollmentsGETForm đăng ký/enrollments/createGETLưu đăng ký/enrollmentsPOST
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+🔧 Lệnh Artisan hữu ích
+bash# Tạo Form Request
+php artisan make:request CourseRequest
 
-## Contributing
+# Tạo Model + Migration + Controller cùng lúc
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+php artisan make:model Course -mcr
 
-## Code of Conduct
+# Xem danh sách routes
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+php artisan route:list
 
-## Security Vulnerabilities
+# Xóa cache
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+php artisan cache:clear
+php artisan config:clear
+php artisan view:clear
 
-## License
+# Chạy lại migration từ đầu (reset toàn bộ data)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+php artisan migrate:fresh --seed
+
+🔍 Tính năng nâng cao
+Tìm kiếm & Lọc
+Truy cập /courses?search=laravel&status=published&sort=price_asc để tìm kiếm theo tên, lọc theo trạng thái và sắp xếp theo giá.
+Query Scope
+Model Course có sẵn hai scope:
+
+scopePublished() — chỉ lấy khóa học đang published
+scopePriceBetween($min, $max) — lọc theo khoảng giá
+
+Tối ưu N+1 Query
+Toàn bộ danh sách khóa học đều sử dụng Eager Loading:
+phpCourse::with(['lessons', 'enrollments.student'])->paginate(10);
+
+📸 Ảnh chụp màn hình
+
+Thêm ảnh vào thư mục /docs/screenshots/ sau khi chạy dự án.
+
+dashboard.png — Trang tổng quan thống kê
+courses-index.png — Danh sách khóa học
+courses-create.png — Form thêm khóa học
+lessons-index.png — Danh sách bài học
+enrollments.png — Danh sách học viên
+
+👤 Tác giả
+
+Sinh viên: Nghiêm Xuân Mạnh
+MSSV: 20221316
+Môn học: Chuyên đề 1
+Giảng viên: Lưu Thảo

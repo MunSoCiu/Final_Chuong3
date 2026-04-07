@@ -20,6 +20,7 @@ return new class extends Migration
                   ->cascadeOnDelete();
 
             $table->timestamps();
+            $table->timestamp('enrolled_at')->nullable();
 
             // tránh trùng đăng ký
             $table->unique(['course_id', 'student_id']);

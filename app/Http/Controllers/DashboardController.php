@@ -4,34 +4,52 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\Enrollment;
+use Illuminate\Support\Facades\DB;
+
 
 class DashboardController extends Controller
 {
-    public function index()
-    {
-        // 📊 Tổng khóa học
-        $totalCourses = Course::count();
+   public function index()
+{
+    $totalCourses = Course::count();
+    $totalStudents = Enrollment::count();
 
-        // 📊 Tổng học viên (distinct)
-        $totalStudents = Enrollment::distinct('student_id')->count('student_id');
+    // 💰 doanh thu
+    $totalRevenue = DB::table('enrollments')
+        ->join('courses', 'enrollments.course_id', '=', 'courses.id')
+        ->sum('courses.price');
 
-        // 📊 Tổng doanh thu
-        $totalRevenue = Course::sum('price');
+    // 📊 học viên 30 ngày
+    $studentsChart = DB::table('enrollments')
+        ->selectRaw('DATE(created_at) as date, COUNT(*) as total')
+        ->where('created_at', '>=', now()->subDays(30))
+        ->groupBy('date')
+        ->pluck('total', 'date');
 
-        // 🔥 Khóa học nhiều học viên nhất
-        $topCourse = Course::withCount('enrollments')
-            ->orderByDesc('enrollments_count')
-            ->first();
+    // 💰 doanh thu theo ngày
+    $revenueChart = DB::table('enrollments')
+        ->join('courses', 'enrollments.course_id', '=', 'courses.id')
+        ->selectRaw('DATE(enrollments.created_at) as date, SUM(courses.price) as total')
+        ->groupBy('date')
+        ->pluck('total', 'date');
 
-        // 🆕 5 khóa học mới
-        $latestCourses = Course::latest()->take(5)->get();
+    // 📚 course chart
+    $courseChart = Course::withCount('enrollments')
+        ->orderByDesc('enrollments_count')
+        ->take(5)
+        ->get();
 
-        return view('dashboard', compact(
-            'totalCourses',
-            'totalStudents',
-            'totalRevenue',
-            'topCourse',
-            'latestCourses'
-        ));
-    }
+    // 🆕 latest
+    $latestCourses = Course::latest()->take(5)->get();
+
+    return view('dashboard', compact(
+        'totalCourses',
+        'totalStudents',
+        'totalRevenue',
+        'studentsChart',   // 👈 QUAN TRỌNG
+        'revenueChart',    // 👈
+        'courseChart',     // 👈
+        'latestCourses'
+    ));
+}
 }

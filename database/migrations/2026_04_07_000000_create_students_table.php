@@ -13,6 +13,9 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamps();
+             $table->string('msv')->unique();
+    $table->date('dob')->nullable();
+    $table->string('address')->nullable();
         });
     }
 

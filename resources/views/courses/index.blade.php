@@ -3,7 +3,27 @@
 @section('content')
 
 <h3>Danh sách khóa học</h3>
-
+<!-- ✅ CSS -->
+<style>
+.pagination .page-link {
+    border-radius: 10px;
+    margin: 0 4px;
+    color: #333;
+    transition: 0.2s;
+}
+.pagination .page-link:hover {
+    background: #0d6efd;
+    color: #fff;
+}
+.pagination .active .page-link {
+    background: #0d6efd;
+    color: #fff;
+    border: none;
+}
+.pagination .page-item.disabled .page-link {
+    color: #aaa;
+}
+</style>
 <a href="{{ route('courses.create') }}" class="btn btn-success mb-3">+ Thêm</a>
 
 <table class="table table-bordered">
@@ -19,7 +39,7 @@
 @foreach($courses as $c)
 <tr>
     <td>{{ $c->name }}</td>
-    <td>{{ number_format($c->price) }}</td>
+    <td>{{ number_format($c->price, 0, ',', '.') }}</td>
     <td>@include('components.status',['status'=>$c->status])</td>
     <td>{{ $c->lessons_count }}</td>
     <td>
@@ -41,5 +61,35 @@
 </table>
 
 
+<div class="d-flex justify-content-center mt-4">
+    <ul class="pagination">
+
+        <!-- Prev -->
+        @if ($courses->onFirstPage())
+            <li class="page-item disabled"><span class="page-link">‹</span></li>
+        @else
+            <li class="page-item">
+                <a class="page-link" href="{{ $courses->previousPageUrl() }}">‹</a>
+            </li>
+        @endif
+
+        <!-- Numbers -->
+        @for ($i = 1; $i <= $courses->lastPage(); $i++)
+            <li class="page-item {{ $i == $courses->currentPage() ? 'active' : '' }}">
+                <a class="page-link" href="{{ $courses->url($i) }}">{{ $i }}</a>
+            </li>
+        @endfor
+
+        <!-- Next -->
+        @if ($courses->hasMorePages())
+            <li class="page-item">
+                <a class="page-link" href="{{ $courses->nextPageUrl() }}">›</a>
+            </li>
+        @else
+            <li class="page-item disabled"><span class="page-link">›</span></li>
+        @endif
+
+    </ul>
+</div>
 
 @endsection
